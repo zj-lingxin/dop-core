@@ -32,7 +32,7 @@ object SourceFlagEntity extends LazyLogging {
 
   object db {
 
-    private val TABLE_NAME = "source_flag"
+    val TABLE_NAME = "source_flag"
 
     def init(): Unit = {
       DBHelper.update {

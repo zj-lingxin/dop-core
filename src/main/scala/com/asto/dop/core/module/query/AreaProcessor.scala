@@ -48,7 +48,7 @@ object AreaProcessor extends QueryProcessor {
           visitList.foreach {
             visit =>
               val findResult = Await.result(DBHelper.find(s" select count(1) AS regCount from user_opt where user_id in(select distinct a.u_user_id from visit a where a.c_ip_province=?)",
-                List(visit._1), classOf[JsonObject]), 30seconds).body
+                List(visit._1), classOf[JsonObject]), 30 seconds).body
               vistorTop10Json = s"""$vistorTop10Json
 
                   |{area:"${visit._1}+",vistorCount:"|${visit._2}|"regCount:"|${findResult.map(i => i.getLong("regCount"))}|},""""
