@@ -1,0 +1,41 @@
+{
+  "http": {
+    "host": "127.0.0.1",
+    "port": 8080
+  },
+  "db": {
+    "driver_class": "com.mysql.jdbc.Driver",
+    "jdbc": "jdbc:mysql://192.168.4.99:3306/dop?characterEncoding=UTF-8",
+    "userName": "root",
+    "userPassword": "123456",
+    "max_pool_size": 200
+  },
+  "binlog": {
+    "host": "192.168.4.99",
+    "port": 3306,
+    "userName": "root",
+    "userPassword": "123456",
+    "monitorTables": "user,bind,apply"
+  },
+  "businessApi": {
+    "apply": {
+      "table": "apply",
+      "api": "http://127.0.0.1:8088/api/apply/"
+    },
+    "bind": {
+      "table": "bind",
+      "api": "http://127.0.0.1:8088/api/self-examine-pass/"
+    },
+    "self_examine_pass": {
+      "table": "apply",
+      "api": "http://127.0.0.1:8088/api/self-examine-pass/"
+    },
+    "bank_examine_pass": {
+      "table": "apply",
+      "api": "http://127.0.0.1:8088/api/bank-examine-pass/"
+    }
+  },
+  "visitRecomputeAction": "login_success",
+  "visitRegisterAction": "register_success",
+  "ip_path":"C:\\Users\\i\\OneDrive\\Work_Projects\\ProjectDeveloping\\dop\\source\\dop-core\\src\\main\\resources\\ip.dat"
+}

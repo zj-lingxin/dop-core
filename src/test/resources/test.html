@@ -1,0 +1,37 @@
+<html>
+<head><title>Test</title></head>
+<body>
+<script src="http://code.jquery.com/jquery-1.11.3.min.js"></script>
+<script>
+    $(function(){
+        $.ajax({
+            url : "http://192.168.5.134:8080/collect/browser/visit/",
+            data :JSON.stringify({
+                "request_id" : "455446",
+                "c_platform" : "pc",
+                "c_system" : "windows",
+                "u_user_id" : "",
+                "u_cookie_id" : "1dsfsfsd052dd:",
+                "u_cookies" : "afsdfwecfeissmfkdfsjfsfsfdsewvhjfgfhfgjh",
+                "v_source" : "baidu",
+                "v_referer" : "http://www.baidu.com/q:xx",
+                "v_url" : "http://www.yuanbaopu.com/index.htm",
+                "v_action": "login"
+            }) ,
+            type : 'post',
+            async:true,
+            dataType : "JSON",
+            contentType:"application/json",
+            success : function(data) {
+                alert(data);
+            },
+            error: function(e) {
+                alert(e);
+            }
+        });
+    });
+</script>
+<form onsubmit="return false;">
+</form>
+</body>
+</html>

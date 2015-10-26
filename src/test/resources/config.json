@@ -1,0 +1,46 @@
+{
+  //HTTP服务
+  "http": {
+    "host": "127.0.0.1",
+    "port": 8080
+  },
+  //MySQL数据库
+  "db": {
+    "driver_class": "com.mysql.jdbc.Driver",
+    "jdbc": "jdbc:mysql://192.168.4.99:3306/dop?characterEncoding=UTF-8",
+    "userName": "root",
+    "userPassword": "123456",
+    "max_pool_size": 40
+  },
+  //Binlog监控数据库信息
+  "binlog": {
+    "host": "192.168.4.99",
+    "port": 3306,
+    "userName": "root",
+    "userPassword": "123456",
+    "monitorTables": "user,bind,apply"
+  },
+  "businessApi": {
+    "apply": {
+      "table": "apply",
+      "api": "http://192.168.4.128:8081/statistics/apply"
+    },
+    "bind": {
+      "table": "bind",
+      "api": "http://192.168.4.128:8081/statistics/addshop"
+    },
+    "self_examine_pass": {
+      "table": "apply",
+      "api": "http://192.168.4.128:8081/statistics/selfexaminepass"
+    },
+    "bank_examine_pass": {
+      "table": "apply",
+      "api": "http://192.168.4.128:8081/statistics/bankexaminepass"
+    }
+  },
+  //遇到此action时重新计算是否是新访客
+  "visitRecomputeAction": "login_success",
+  "visitRegisterAction": "register_success",
+  //IP地址库路径
+  "ip_path":"C:\\Users\\i\\OneDrive\\Work_Projects\\ProjectDeveloping\\dop\\source\\dop-core\\target\\config\\ip.dat"
+}

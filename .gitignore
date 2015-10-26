@@ -1,8 +1,18 @@
+### Scala template
+*.class
+*.log
+
+.cache
+.history
+.lib/
+dist/*
 target/
-pom.xml.tag
-pom.xml.releaseBackup
-pom.xml.versionsBackup
-pom.xml.next
-release.properties
-dependency-reduced-pom.xml
-buildNumber.properties
+lib_managed/
+src_managed/
+project/boot/
+project/plugins/project/
+
+.scala_dependencies
+.worksheet
+
+*.iml
