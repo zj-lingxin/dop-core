@@ -27,37 +27,44 @@ object DBHelper extends LazyLogging {
     val p = Promise[Resp[Void]]()
     db.onComplete {
       case Success(conn) =>
-        if (parameters == null) {
-          conn.update(sql,
-            new Handler[AsyncResult[UpdateResult]] {
-              override def handle(event: AsyncResult[UpdateResult]): Unit = {
-                if (event.succeeded()) {
-                  conn.close()
-                  p.success(Resp.success(null))
-                } else {
-                  logger.debug(s"DB execute error : $sql [$parameters]", event.cause())
-                  conn.close()
-                  p.success(Resp.serverError(event.cause().getMessage))
+        try {
+          if (parameters == null) {
+            conn.update(sql,
+              new Handler[AsyncResult[UpdateResult]] {
+                override def handle(event: AsyncResult[UpdateResult]): Unit = {
+                  if (event.succeeded()) {
+                    conn.close()
+                    p.success(Resp.success(null))
+                  } else {
+                    conn.close()
+                    logger.debug(s"DB execute error : $sql [$parameters]", event.cause())
+                    p.success(Resp.serverError(event.cause().getMessage))
+                  }
                 }
               }
-            }
-          )
-        } else {
-          conn.updateWithParams(sql,
-            new JsonArray(parameters.toList),
-            new Handler[AsyncResult[UpdateResult]] {
-              override def handle(event: AsyncResult[UpdateResult]): Unit = {
-                if (event.succeeded()) {
-                  conn.close()
-                  p.success(Resp.success(null))
-                } else {
-                  logger.debug(s"DB execute error : $sql [$parameters]", event.cause())
-                  conn.close()
-                  p.success(Resp.serverError(event.cause().getMessage))
+            )
+          } else {
+            conn.updateWithParams(sql,
+              new JsonArray(parameters.toList),
+              new Handler[AsyncResult[UpdateResult]] {
+                override def handle(event: AsyncResult[UpdateResult]): Unit = {
+                  if (event.succeeded()) {
+                    conn.close()
+                    p.success(Resp.success(null))
+                  } else {
+                    conn.close()
+                    logger.debug(s"DB execute error : $sql [$parameters]", event.cause())
+                    p.success(Resp.serverError(event.cause().getMessage))
+                  }
                 }
               }
-            }
-          )
+            )
+          }
+        } catch {
+          case ex: Throwable =>
+            conn.close()
+            logger.error(s"DB execute error : $sql [$parameters]", ex)
+            p.success(Resp.serverError(ex.getMessage))
         }
       case Failure(ex) =>
         p.success(Resp.serverUnavailable(ex.getMessage))
@@ -69,39 +76,46 @@ object DBHelper extends LazyLogging {
     val p = Promise[Resp[Void]]()
     db.onComplete {
       case Success(conn) =>
-        val counter = new AtomicLong(parameterList.length)
-        parameterList.foreach {
-          parameters =>
-            if (parameters == null) {
-              conn.update(sql,
-                new Handler[AsyncResult[UpdateResult]] {
-                  override def handle(event: AsyncResult[UpdateResult]): Unit = {
-                    if (!event.succeeded()) {
-                      logger.debug(s"DB execute error : $sql [$parameters]", event.cause())
-                    }
-                    if (counter.decrementAndGet() == 0) {
-                      conn.close()
-                      p.success(Resp.success(null))
-                    }
-                  }
-                }
-              )
-            } else {
-              conn.updateWithParams(sql,
-                new JsonArray(parameters),
-                new Handler[AsyncResult[UpdateResult]] {
-                  override def handle(event: AsyncResult[UpdateResult]): Unit = {
-                    if (!event.succeeded()) {
-                      logger.debug(s"DB execute error : $sql [$parameters]", event.cause())
-                    }
-                    if (counter.decrementAndGet() == 0) {
-                      conn.close()
-                      p.success(Resp.success(null))
+        try {
+          val counter = new AtomicLong(parameterList.length)
+          parameterList.foreach {
+            parameters =>
+              if (parameters == null) {
+                conn.update(sql,
+                  new Handler[AsyncResult[UpdateResult]] {
+                    override def handle(event: AsyncResult[UpdateResult]): Unit = {
+                      if (!event.succeeded()) {
+                        logger.debug(s"DB execute error : $sql [$parameters]", event.cause())
+                      }
+                      if (counter.decrementAndGet() == 0) {
+                        conn.close()
+                        p.success(Resp.success(null))
+                      }
                     }
                   }
-                }
-              )
-            }
+                )
+              } else {
+                conn.updateWithParams(sql,
+                  new JsonArray(parameters),
+                  new Handler[AsyncResult[UpdateResult]] {
+                    override def handle(event: AsyncResult[UpdateResult]): Unit = {
+                      if (!event.succeeded()) {
+                        logger.debug(s"DB execute error : $sql [$parameters]", event.cause())
+                      }
+                      if (counter.decrementAndGet() == 0) {
+                        conn.close()
+                        p.success(Resp.success(null))
+                      }
+                    }
+                  }
+                )
+              }
+          }
+        } catch {
+          case ex: Throwable =>
+            conn.close()
+            logger.error(s"DB execute error : $sql", ex)
+            p.success(Resp.serverError(ex.getMessage))
         }
       case Failure(ex) =>
         p.success(Resp.serverUnavailable(ex.getMessage))
@@ -113,36 +127,45 @@ object DBHelper extends LazyLogging {
     val p = Promise[Resp[E]]()
     db.onComplete {
       case Success(conn) =>
-        conn.queryWithParams(sql,
-          new JsonArray(parameters.toList),
-          new Handler[AsyncResult[ResultSet]] {
-            override def handle(event: AsyncResult[ResultSet]): Unit = {
-              if (event.succeeded()) {
-                val row = if (event.result().getNumRows == 1) {
-                  event.result().getRows.get(0)
-                } else {
-                  null
-                }
-                if (row != null) {
-                  if (resultClass != classOf[JsonObject]) {
-                    conn.close()
-                    p.success(Resp.success(JsonHelper.toObject(row.encode(), resultClass)))
+        try {
+          conn.queryWithParams(sql,
+            new JsonArray(parameters.toList),
+            new Handler[AsyncResult[ResultSet]] {
+              override def handle(event: AsyncResult[ResultSet]): Unit = {
+                if (event.succeeded()) {
+                  val row = if (event.result().getNumRows == 1) {
+                    event.result().getRows.get(0)
+                  } else {
+                    null
+                  }
+                  if (row != null) {
+                    if (resultClass != classOf[JsonObject]) {
+                      val result = Resp.success(JsonHelper.toObject(row.encode(), resultClass))
+                      conn.close()
+                      p.success(result)
+                    } else {
+                      val result = Resp.success(row.asInstanceOf[E])
+                      conn.close()
+                      p.success(result)
+                    }
                   } else {
                     conn.close()
-                    p.success(Resp.success(row.asInstanceOf[E]))
+                    p.success(Resp.success(null.asInstanceOf[E]))
                   }
                 } else {
                   conn.close()
-                  p.success(Resp.success(null.asInstanceOf[E]))
+                  logger.debug(s"DB execute error : $sql [$parameters]", event.cause())
+                  p.success(Resp.serverError(event.cause().getMessage))
                 }
-              } else {
-                logger.debug(s"DB execute error : $sql [$parameters]", event.cause())
-                conn.close()
-                p.success(Resp.serverError(event.cause().getMessage))
               }
             }
-          }
-        )
+          )
+        } catch {
+          case ex: Throwable =>
+            conn.close()
+            logger.error(s"DB execute error : $sql [$parameters]", ex)
+            p.success(Resp.serverError(ex.getMessage))
+        }
       case Failure(ex) => p.success(Resp.serverUnavailable(ex.getMessage))
     }
     p.future
@@ -152,29 +175,39 @@ object DBHelper extends LazyLogging {
     val p = Promise[Resp[List[E]]]()
     db.onComplete {
       case Success(conn) =>
-        conn.queryWithParams(sql,
-          new JsonArray(parameters.toList),
-          new Handler[AsyncResult[ResultSet]] {
-            override def handle(event: AsyncResult[ResultSet]): Unit = {
-              if (event.succeeded()) {
-                val rows = event.result().getRows.toList
-                if (resultClass != classOf[JsonObject]) {
-                  p.success(Resp.success(rows.map {
-                    row =>
-                      JsonHelper.toObject(row.encode(), resultClass)
-                  }))
+        try {
+          conn.queryWithParams(sql,
+            new JsonArray(parameters.toList),
+            new Handler[AsyncResult[ResultSet]] {
+              override def handle(event: AsyncResult[ResultSet]): Unit = {
+                if (event.succeeded()) {
+                  val rows = event.result().getRows.toList
+                  if (resultClass != classOf[JsonObject]) {
+                    val result = Resp.success(rows.map {
+                      row =>
+                        JsonHelper.toObject(row.encode(), resultClass)
+                    })
+                    conn.close()
+                    p.success(result)
+                  } else {
+                    val result = Resp.success(rows.asInstanceOf[List[E]])
+                    conn.close()
+                    p.success(result)
+                  }
                 } else {
                   conn.close()
-                  p.success(Resp.success(rows.asInstanceOf[List[E]]))
+                  logger.debug(s"DB execute error : $sql [$parameters]", event.cause())
+                  p.success(Resp.serverError(event.cause().getMessage))
                 }
-              } else {
-                logger.debug(s"DB execute error : $sql [$parameters]", event.cause())
-                conn.close()
-                p.success(Resp.serverError(event.cause().getMessage))
               }
             }
-          }
-        )
+          )
+        } catch {
+          case ex: Throwable =>
+            conn.close()
+            logger.error(s"DB execute error : $sql [$parameters]", ex)
+            p.success(Resp.serverError(ex.getMessage))
+        }
       case Failure(ex) => p.success(Resp.serverUnavailable(ex.getMessage))
     }
     p.future
@@ -184,43 +217,50 @@ object DBHelper extends LazyLogging {
     val p = Promise[Resp[Page[E]]]()
     db.onComplete {
       case Success(conn) =>
-        countInner(sql, parameters).onSuccess {
-          case countResp =>
-            if (countResp) {
-              val page = new Page[E]
-              page.pageNumber = pageNumber
-              page.pageSize = pageSize
-              page.recordTotal = countResp.body
-              page.pageTotal = (page.recordTotal + pageSize - 1) / pageSize
-              val limitSql = s"$sql limit ${(pageNumber - 1) * pageSize} ,$pageSize"
-              conn.queryWithParams(limitSql,
-                new JsonArray(parameters.toList),
-                new Handler[AsyncResult[ResultSet]] {
-                  override def handle(event: AsyncResult[ResultSet]): Unit = {
-                    if (event.succeeded()) {
-                      val rows = event.result().getRows.toList
-                      if (resultClass != classOf[JsonObject]) {
-                        page.objects = rows.map {
-                          row =>
-                            JsonHelper.toObject(row.encode(), resultClass)
+        try {
+          countInner(sql, parameters).onSuccess {
+            case countResp =>
+              if (countResp) {
+                val page = new Page[E]
+                page.pageNumber = pageNumber
+                page.pageSize = pageSize
+                page.recordTotal = countResp.body
+                page.pageTotal = (page.recordTotal + pageSize - 1) / pageSize
+                val limitSql = s"$sql limit ${(pageNumber - 1) * pageSize} ,$pageSize"
+                conn.queryWithParams(limitSql,
+                  new JsonArray(parameters.toList),
+                  new Handler[AsyncResult[ResultSet]] {
+                    override def handle(event: AsyncResult[ResultSet]): Unit = {
+                      if (event.succeeded()) {
+                        val rows = event.result().getRows.toList
+                        if (resultClass != classOf[JsonObject]) {
+                          page.objects = rows.map {
+                            row =>
+                              JsonHelper.toObject(row.encode(), resultClass)
+                          }
+                        } else {
+                          page.objects = rows.asInstanceOf[List[E]]
                         }
+                        conn.close()
+                        p.success(Resp.success(page))
                       } else {
-                        page.objects = rows.asInstanceOf[List[E]]
+                        conn.close()
+                        logger.debug(s"DB execute error : $sql [$parameters]", event.cause())
+                        p.success(Resp.serverError(event.cause().getMessage))
                       }
-                      conn.close()
-                      p.success(Resp.success(page))
-                    } else {
-                      logger.debug(s"DB execute error : $sql [$parameters]", event.cause())
-                      conn.close()
-                      p.success(Resp.serverError(event.cause().getMessage))
                     }
                   }
-                }
-              )
-            } else {
-              conn.close()
-              p.success(countResp)
-            }
+                )
+              } else {
+                conn.close()
+                p.success(countResp)
+              }
+          }
+        } catch {
+          case ex: Throwable =>
+            conn.close()
+            logger.error(s"DB execute error : $sql [$parameters]", ex)
+            p.success(Resp.serverError(ex.getMessage))
         }
       case Failure(ex) => p.success(Resp.serverUnavailable(ex.getMessage))
     }
@@ -231,21 +271,29 @@ object DBHelper extends LazyLogging {
     val p = Promise[Resp[Long]]()
     db.onComplete {
       case Success(conn) =>
-        conn.queryWithParams(sql,
-          new JsonArray(parameters.toList),
-          new Handler[AsyncResult[ResultSet]] {
-            override def handle(event: AsyncResult[ResultSet]): Unit = {
-              if (event.succeeded()) {
-                conn.close()
-                p.success(Resp.success(event.result().getResults.get(0).getLong(0)))
-              } else {
-                logger.debug(s"DB execute error : $sql [$parameters]", event.cause())
-                conn.close()
-                p.success(Resp.serverError(event.cause().getMessage))
+        try {
+          conn.queryWithParams(sql,
+            new JsonArray(parameters.toList),
+            new Handler[AsyncResult[ResultSet]] {
+              override def handle(event: AsyncResult[ResultSet]): Unit = {
+                if (event.succeeded()) {
+                  val result = Resp.success[Long](event.result().getResults.get(0).getLong(0))
+                  conn.close()
+                  p.success(result)
+                } else {
+                  conn.close()
+                  logger.debug(s"DB execute error : $sql [$parameters]", event.cause())
+                  p.success(Resp.serverError(event.cause().getMessage))
+                }
               }
             }
-          }
-        )
+          )
+        } catch {
+          case ex: Throwable =>
+            conn.close()
+            logger.error(s"DB execute error : $sql [$parameters]", ex)
+            p.success(Resp.serverError(ex.getMessage))
+        }
       case Failure(ex) => p.success(Resp.serverUnavailable(ex.getMessage))
     }
     p.future
@@ -262,8 +310,9 @@ object DBHelper extends LazyLogging {
           new Handler[AsyncResult[ResultSet]] {
             override def handle(event: AsyncResult[ResultSet]): Unit = {
               if (event.succeeded()) {
+                val result = Resp.success[Long](event.result().getResults.get(0).getLong(0))
                 conn.close()
-                p.success(Resp.success(event.result().getResults.get(0).getLong(0)))
+                p.success(result)
               } else {
                 logger.debug(s"DB execute error : $sql [$parameters]", event.cause())
                 conn.close()
@@ -281,26 +330,33 @@ object DBHelper extends LazyLogging {
     val p = Promise[Resp[Boolean]]()
     db.onComplete {
       case Success(conn) =>
-        conn.queryWithParams(sql,
-          new JsonArray(parameters.toList),
-          new Handler[AsyncResult[ResultSet]] {
-            override def handle(event: AsyncResult[ResultSet]): Unit = {
-              if (event.succeeded()) {
-                if (event.result().getNumRows > 0) {
-                  conn.close()
-                  p.success(Resp.success(true))
+        try {
+          conn.queryWithParams(sql,
+            new JsonArray(parameters.toList),
+            new Handler[AsyncResult[ResultSet]] {
+              override def handle(event: AsyncResult[ResultSet]): Unit = {
+                if (event.succeeded()) {
+                  if (event.result().getNumRows > 0) {
+                    conn.close()
+                    p.success(Resp.success(true))
+                  } else {
+                    conn.close()
+                    p.success(Resp.success(false))
+                  }
                 } else {
                   conn.close()
-                  p.success(Resp.success(false))
+                  logger.debug(s"DB execute error : $sql [$parameters]", event.cause())
+                  p.success(Resp.serverError(event.cause().getMessage))
                 }
-              } else {
-                logger.debug(s"DB execute error : $sql [$parameters]", event.cause())
-                conn.close()
-                p.success(Resp.serverError(event.cause().getMessage))
               }
             }
-          }
-        )
+          )
+        } catch {
+          case ex: Throwable =>
+            conn.close()
+            logger.error(s"DB execute error : $sql [$parameters]", ex)
+            p.success(Resp.serverError(ex.getMessage))
+        }
       case Failure(ex) => p.success(Resp.serverUnavailable(ex.getMessage))
     }
     p.future

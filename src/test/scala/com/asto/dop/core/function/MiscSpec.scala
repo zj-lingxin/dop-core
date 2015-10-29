@@ -29,7 +29,6 @@ class MiscSpec extends FunSuite {
       result =>
         println(result)
         counter.countDown()
-
     })
 
     counter.await()

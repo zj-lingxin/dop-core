@@ -18,6 +18,7 @@ class VisitDBSpec extends DBBasicSpec {
     val visitEntity = VisitEntity()
     val time = df.format(new Date())
     visitEntity.occur_time = time.toLong
+    visitEntity.occur_datehour = time.substring(0, 10).toLong
     visitEntity.occur_date = time.substring(0, 8).toLong
     visitEntity.occur_month = time.substring(0, 6).toLong
     visitEntity.occur_year = time.substring(0, 4).toLong

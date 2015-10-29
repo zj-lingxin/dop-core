@@ -2,9 +2,8 @@ package com.asto.dop.core.business.collect
 
 import java.util.concurrent.CountDownLatch
 
-import com.asto.dop.core.Global
 import com.asto.dop.core.business.BusinessBasicSpec
-import com.asto.dop.core.entity.{UserOptEntity, VisitEntity}
+import com.asto.dop.core.entity.VisitEntity
 import com.asto.dop.core.module.collect._
 
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -131,10 +130,10 @@ class CollectProcessSpec extends BusinessBasicSpec {
   test("API Process Test") {
     val cdl = new CountDownLatch(1)
 
-    APIProcessor.processApply(UserOptEntity.FLAG_APPLY, Global.businessApi_apply._2)
-    APIProcessor.processBind(UserOptEntity.FLAG_BIND, Global.businessApi_bind._2)
-    APIProcessor.processSelfExaminePass(UserOptEntity.FLAG_SELF_EXAMINE_PASS, Global.businessApi_selfExaminePass._2)
-    APIProcessor.processBankExaminePass(UserOptEntity.FLAG_BANK_EXAMINE_PASS, Global.businessApi_bankExaminePass._2)
+    APIProcessor.processApply()
+    APIProcessor.processBind()
+    APIProcessor.processSelfExaminePass()
+    APIProcessor.processBankExaminePass()
     /*APIProcessor.process(Global.businessApi_bind._1)
      APIProcessor.process(Global.businessApi_selfExaminePass._1)
      APIProcessor.process(Global.businessApi_bankExaminePass._1)*/

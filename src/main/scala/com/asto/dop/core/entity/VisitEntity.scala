@@ -13,10 +13,12 @@ case class VisitEntity() {
   var id: String = _
   // | Y | 访客主键，用于区别访客的唯一标识
   var visitor_id: String = _
-  // | Y | 页面访问标识，用于心跳请求，区分是否是同一次页面访问，格式`hash32(v_url+6位随机数)`
+  // | Y | 页面访问标识，用于心跳请求，区分是否是同一次页面访问，格式`md5 32(v_url+6位随机数)`
   var pv_hash: String = _
   // | Y | 发生时间，格式`yyyyMMddHHmmss`,如 20151012100000
   var occur_time: Long = _
+  // | Y | 发生小时，格式`yyyyMMddHH`,如 2015101212
+  var occur_datehour: Long = _
   // | Y | 发生日期，格式`yyyyMMdd`,如 20151012
   var occur_date: Long = _
   // | Y | 发生年月，格式`yyyyMM`,如 201510
@@ -24,7 +26,7 @@ case class VisitEntity() {
   // | Y | 发生年份，格式`yyyyMMdd`,如 2015
   var occur_year: Long = _
   //Client info 访问客户端信息
-  //| Y | 客户端使用的平台，枚举：`pc/mobile` ，除pc以外的设备都归属mobile |
+  //| Y | 客户端使用的平台，枚举：`pc/mobile` ，除pc以外的设备都归属mobile
   var c_platform: String = _
   //| Y | 客户端使用的系统，枚举：`windows/linux/mac/android/iphone/ipad/wp/otherpad/otherphone/others`
   var c_system: String = _
@@ -51,7 +53,7 @@ case class VisitEntity() {
   var u_user_id: String = _
   // | N | cookie中用于标识用户唯一性的id值，所有通过浏览器访问的记录都应存在此值
   var u_cookie_id: String = _
-  // | N | cookies信息的base64编码，所有通过浏览器访问的记录都应存在此值
+  // | N | cookies信息，所有通过浏览器访问的记录都应存在此值
   var u_cookies: String = _
   //Visit info 访问信息
   // | Y | 是否是新访客，1表示是，0表示否，此定义见`述语`章节
@@ -89,6 +91,7 @@ object VisitEntity {
             |    visitor_id varchar(200) NOT NULL COMMENT '访客主键，用于区别访客的唯一标识' ,
             |    pv_hash varchar(50) NOT NULL COMMENT '页面访问标识，用于心跳请求，区分是否是同一次页面访问，格式`hash32(v_url+6位随机数)`' ,
             |    occur_time BIGINT NOT NULL COMMENT '发生时间，格式`yyyyMMddHHmmss`,如 20151012100000' ,
+            |    occur_datehour INT NOT NULL COMMENT '发生小时，格式`yyyyMMddHH`,如 2015101212' ,
             |    occur_date INT NOT NULL COMMENT '发生日期，格式`yyyyMMdd`,如 20151012' ,
             |    occur_month INT NOT NULL COMMENT '发生年月，格式`yyyyMM`,如 201510' ,
             |    occur_year INT NOT NULL COMMENT '发生年份，格式`yyyyMMdd`,如 2015' ,
@@ -105,7 +108,7 @@ object VisitEntity {
             |    c_gps varchar(100) NOT NULL COMMENT '客户端使用GPS位置' ,
             |    u_user_id varchar(255) NOT NULL COMMENT '用户id，要求是真实用户表的主键或可以与之映射，未登录用户此字段为空' ,
             |    u_cookie_id varchar(255) NOT NULL COMMENT 'cookie中用于标识用户唯一性的id值，所有通过浏览器访问的记录都应存在此值' ,
-            |    u_cookies varchar(8000) NOT NULL COMMENT 'cookies信息的base64编码，所有通过浏览器访问的记录都应存在此值' ,
+            |    u_cookies varchar(8000) NOT NULL COMMENT 'cookies信息，所有通过浏览器访问的记录都应存在此值' ,
             |    v_new_visitor BOOLEAN NOT NULL COMMENT '是否是新访客，1表示是，0表示否，此定义见' ,
             |    v_source varchar(255) NOT NULL COMMENT '访问转入来源，如：直接访问、百度推广、91助手app等' ,
             |    v_referer varchar(5000) NOT NULL COMMENT '访问referer，所有通过浏览器访问的记录都应存在此值' ,
@@ -118,15 +121,16 @@ object VisitEntity {
             |    INDEX i_pv_hash(pv_hash) ,
             |    INDEX i_occur_time(occur_time) ,
             |    INDEX i_occur_date(occur_date) ,
+            |    INDEX i_occur_datehour(occur_datehour) ,
             |    INDEX i_c_platform(c_platform) ,
             |    INDEX i_c_system(c_system) ,
             |    INDEX i_c_device_id(c_device_id) ,
             |    INDEX i_c_ipv4(c_ipv4) ,
             |    INDEX i_c_ip_country(c_ip_country) ,
-            |    INDEX i_c_ip_isp(c_ip_isp) ,
             |    INDEX i_c_ip_province(c_ip_province) ,
             |    INDEX i_c_ip_city(c_ip_city) ,
             |    INDEX i_c_ip_county(c_ip_county) ,
+            |    INDEX i_c_ip_isp(c_ip_isp) ,
             |    INDEX i_c_gps(c_gps) ,
             |    INDEX i_u_user_id(u_user_id) ,
             |    INDEX i_u_cookie_id(u_cookie_id) ,
@@ -146,16 +150,16 @@ object VisitEntity {
       DBHelper.update(
         s"""
            |INSERT INTO $TABLE_NAME (
-           |	id ,visitor_id,pv_hash,  occur_time , occur_date ,occur_month,occur_year,
+           |	id ,visitor_id,pv_hash,  occur_time ,occur_datehour, occur_date ,occur_month,occur_year,
            |	c_platform , c_system ,  c_device_id , c_ipv4 , c_ip_addr , c_ip_country , c_ip_province , c_ip_city , c_ip_county , c_ip_isp , c_gps ,
            |	u_user_id , u_cookie_id , u_cookies ,
            |	v_new_visitor , v_source , v_referer , v_url , v_url_path , v_action , v_residence_time
-           |	) VALUES(
-           |	 ? , ? ,?, ?, ? , ? , ? , ? , ? , ? , ? ,? , ? , ? , ? , ? , ? , ? , ? , ? , ? , ? , ? , ? , ? , ? , ? , ?
+           |	) VALUES (
+           |	 ? , ? ,?, ?, ? , ? , ? , ? , ? , ? , ? , ? ,? , ? , ? , ? , ? , ? , ? , ? , ? , ? , ? , ? , ? , ? , ? , ? , ?
            |	)
         """.stripMargin,
         List(
-          obj.id, obj.visitor_id, obj.pv_hash, obj.occur_time, obj.occur_date, obj.occur_month, obj.occur_year,
+          obj.id, obj.visitor_id, obj.pv_hash, obj.occur_time,obj.occur_datehour, obj.occur_date, obj.occur_month, obj.occur_year,
           obj.c_platform, obj.c_system, obj.c_device_id, obj.c_ipv4, obj.c_ip_addr, obj.c_ip_country, obj.c_ip_province, obj.c_ip_city, obj.c_ip_county, obj.c_ip_isp, obj.c_gps,
           obj.u_user_id, obj.u_cookie_id, obj.u_cookies,
           obj.v_new_visitor, obj.v_source, obj.v_referer, obj.v_url, obj.v_url_path, obj.v_action, obj.v_residence_time

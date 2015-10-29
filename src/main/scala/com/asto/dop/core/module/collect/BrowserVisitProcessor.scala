@@ -6,7 +6,6 @@ import java.util.{Base64, Date}
 import com.asto.dop.core.IP
 import com.asto.dop.core.entity.VisitEntity
 import com.asto.dop.core.module.EventBus
-import com.asto.dop.core.module.collect.AppVisitProcessor._
 import com.ecfront.common.Resp
 
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -77,6 +76,7 @@ object BrowserVisitProcessor extends VisitCollectProcessor {
     val visitEntity = VisitEntity()
     val time = df.format(new Date())
     visitEntity.occur_time = time.toLong
+    visitEntity.occur_datehour = time.substring(0, 10).toLong
     visitEntity.occur_date = time.substring(0, 8).toLong
     visitEntity.occur_month = time.substring(0, 6).toLong
     visitEntity.occur_year = time.substring(0, 4).toLong

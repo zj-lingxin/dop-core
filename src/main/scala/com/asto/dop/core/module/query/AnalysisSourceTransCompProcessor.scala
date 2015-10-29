@@ -2,7 +2,7 @@ package com.asto.dop.core.module.query
 
 import com.asto.dop.core.entity.{UserOptEntity, VisitEntity}
 import com.asto.dop.core.helper.DBHelper
-import com.ecfront.common.{JsonHelper, Resp}
+import com.ecfront.common.Resp
 import io.vertx.core.json.JsonObject
 
 import scala.collection.mutable.ArrayBuffer
@@ -140,7 +140,7 @@ object AnalysisSourceTransCompProcessor extends QueryProcessor {
         bankExaminePassCount <- bankExaminePassCountResp
       } yield {
         //key=occur_date value=访客数,浏览量,注册数,申请数,自审通过数,银审通过数
-        val result: Map[Long, ArrayBuffer[Long]] = (for (i <- start to end) yield i -> ArrayBuffer[Long](0,0,0,0,0,0)).toMap
+        val result: Map[Long, ArrayBuffer[Long]] = getDateRange(start, end).map(i => i -> ArrayBuffer[Long](0,0,0,0,0,0)).toMap
         visitorCount.body.foreach {
           record =>
             result(record.getLong("occur_date"))(0) = record.getLong("count")

@@ -121,6 +121,13 @@ trait VisitCollectProcessor extends LazyLogging {
       userOpt.action = UserOptEntity.FLAG_REGISTER
       userOpt.platform = visitEntity.c_platform
       userOpt.source = visitEntity.v_source
+      userOpt.ipv4=visitEntity.c_ipv4
+      userOpt.ip_addr=visitEntity.c_ip_addr
+      userOpt.ip_country=visitEntity.c_ip_country
+      userOpt.ip_province=visitEntity.c_ip_province
+      userOpt.ip_city=visitEntity.c_ip_city
+      userOpt.ip_county=visitEntity.c_ip_county
+      userOpt.ip_isp=visitEntity.c_ip_isp
       userOpt.amount = 0
       UserOptEntity.db.save(userOpt)
     }

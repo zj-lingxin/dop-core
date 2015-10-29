@@ -29,7 +29,7 @@ class HttpRouter extends Handler[HttpServerRequest] with LazyLogging {
       case "/collect/browser/visit/" if request.method().name() == "POST" =>
         request.bodyHandler(new Handler[Buffer] {
           override def handle(data: Buffer): Unit = {
-            val browserVisitReq = JsonHelper.toObject(data.getString(0, data.length), classOf[BrowserVisitReq])
+            val browserVisitReq = JsonHelper.toObject(data.toString("UTF-8"), classOf[BrowserVisitReq])
             BrowserVisitProcessor.process(browserVisitReq, request.remoteAddress().host()).onSuccess {
               case result => HttpHelper.returnContent(result, request.response())
             }
@@ -61,8 +61,48 @@ class HttpRouter extends Handler[HttpServerRequest] with LazyLogging {
         TrafficAnalysisProcessor.process(request.params().map(entry => entry.getKey -> entry.getValue).toMap).onSuccess {
           case result => HttpHelper.returnContent(result, request.response())
         }
+      case "/query/area-dist/" if request.method().name() == "GET" =>
+        AreaDistProcessor.process(request.params().map(entry => entry.getKey -> entry.getValue).toMap).onSuccess {
+          case result => HttpHelper.returnContent(result, request.response())
+        }
       case "/query/realtime/visit/" if request.method().name() == "GET" =>
         RealTimeVisitProcessor.process(request.params().map(entry => entry.getKey -> entry.getValue).toMap).onSuccess {
+          case result => HttpHelper.returnContent(result, request.response())
+        }
+      case "/query/realtime/source/platform/" if request.method().name() == "GET" =>
+        RealTimeSourceProcessor.platformProcess(request.params().map(entry => entry.getKey -> entry.getValue).toMap).onSuccess {
+          case result => HttpHelper.returnContent(result, request.response())
+        }
+      case "/query/realtime/source/area/" if request.method().name() == "GET" =>
+        RealTimeSourceProcessor.areaProcess(request.params().map(entry => entry.getKey -> entry.getValue).toMap).onSuccess {
+          case result => HttpHelper.returnContent(result, request.response())
+        }
+      case "/query/realtime/summary/" if request.method().name() == "GET" =>
+        RealTimeSummaryProcessor.process(request.params().map(entry => entry.getKey -> entry.getValue).toMap).onSuccess {
+          case result => HttpHelper.returnContent(result, request.response())
+        }
+      case "/query/analysis/customer-trans/summary/" if request.method().name() == "GET" =>
+        AnalysisCustomerTransProcessor.summaryProcess(request.params().map(entry => entry.getKey -> entry.getValue).toMap).onSuccess {
+          case result => HttpHelper.returnContent(result, request.response())
+        }
+      case "/query/analysis/customer-trans/trend/" if request.method().name() == "GET" =>
+        AnalysisCustomerTransProcessor.trendProcess(request.params().map(entry => entry.getKey -> entry.getValue).toMap).onSuccess {
+          case result => HttpHelper.returnContent(result, request.response())
+        }
+      case "/query/analysis/customer-trans-comp/platform/summary/" if request.method().name() == "GET" =>
+        AnalysisCustomerTransCompProcessor.platformSummaryProcess(request.params().map(entry => entry.getKey -> entry.getValue).toMap).onSuccess {
+          case result => HttpHelper.returnContent(result, request.response())
+        }
+      case "/query/analysis/customer-trans-comp/platform/trend/" if request.method().name() == "GET" =>
+        AnalysisCustomerTransCompProcessor.platformTrendProcess(request.params().map(entry => entry.getKey -> entry.getValue).toMap).onSuccess {
+          case result => HttpHelper.returnContent(result, request.response())
+        }
+      case "/query/analysis/customer-trans-comp/visitor/summary/" if request.method().name() == "GET" =>
+        AnalysisCustomerTransCompProcessor.visitorSummaryProcess(request.params().map(entry => entry.getKey -> entry.getValue).toMap).onSuccess {
+          case result => HttpHelper.returnContent(result, request.response())
+        }
+      case "/query/analysis/customer-trans-comp/visitor/trend/" if request.method().name() == "GET" =>
+        AnalysisCustomerTransCompProcessor.visitorTrendProcess(request.params().map(entry => entry.getKey -> entry.getValue).toMap).onSuccess {
           case result => HttpHelper.returnContent(result, request.response())
         }
       case "/query/analysis/source-trans-comp/summary/" if request.method().name() == "GET" =>
@@ -87,7 +127,7 @@ class HttpRouter extends Handler[HttpServerRequest] with LazyLogging {
       case "/manage/source/" if request.method().name() == "POST" =>
         request.bodyHandler(new Handler[Buffer] {
           override def handle(data: Buffer): Unit = {
-            val sourceFlagEntity = JsonHelper.toObject(data.getString(0, data.length), classOf[SourceFlagEntity])
+            val sourceFlagEntity = JsonHelper.toObject(data.toString("UTF-8"), classOf[SourceFlagEntity])
             SourceProcessor.save(sourceFlagEntity).onSuccess {
               case result => HttpHelper.returnContent(result, request.response())
             }
@@ -108,6 +148,12 @@ class HttpRouter extends Handler[HttpServerRequest] with LazyLogging {
         }
       case rSourceIdMatch(id) if request.method().name() == "DELETE" =>
         SourceProcessor.delete(Map("id" -> id)).onSuccess {
+          case result => HttpHelper.returnContent(result, request.response())
+        }
+      //================================Special Process================================
+      //历史数据迁移，正常情况下用户注册信息由visit记录中v_action=register_success时写入user_opt表
+      case "/special/useropt/register/migration/" if request.method().name() == "GET" =>
+        SpecialProcessor.processRegisterMigration(request.params().map(entry => entry.getKey -> entry.getValue).toMap).onSuccess {
           case result => HttpHelper.returnContent(result, request.response())
         }
       //================================Others================================
