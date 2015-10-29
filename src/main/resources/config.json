@@ -1,6 +1,6 @@
 {
   "http": {
-    "host": "127.0.0.1",
+    "host": "192.168.127.12",
     "port": 8080
   },
   "db": {
@@ -40,5 +40,5 @@
   },
   "visitRecomputeAction": "login_success",
   "visitRegisterAction": "register_success",
-  "ip_path":"C:\\Users\\i\\OneDrive\\Work_Projects\\ProjectDeveloping\\dop\\source\\dop-core\\src\\main\\resources\\ip.dat"
+  "ip_path":"/data/work/myworkspace/dop/source/dop-core/src/main/resources/ip.dat"
 }
