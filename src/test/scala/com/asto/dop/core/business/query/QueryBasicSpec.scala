@@ -53,12 +53,12 @@ abstract class QueryBasicSpec extends BusinessBasicSpec {
       ), "115.236.188.98")
       //用户zhangsan换成了手机操作
       v9F <- AppVisitProcessor.process(AppVisitReq(
-        request_id = "111119", c_system = "iphone", c_device_id = "d1", c_ipv4 = "115.236.188.89", c_gps = "",
-        u_user_id = "", v_source = "91助手", v_url_path = "/user/login/", v_action = ""))
+        request_id = "111119", c_system = "iphone", c_device_id = "d1", c_ip_addr = "浙江杭州江干",c_ip_country = "中国",c_ip_province = "浙江",c_ip_city = "杭州",c_ip_county = "江干", c_gps = "",
+        u_user_id = "", v_source = "91助手", v_url_path = "/user/login/", v_action = ""),"")
       //用户zhangsan在手机APP中登录
       v10F <- AppVisitProcessor.process(AppVisitReq(
-        request_id = "111120", c_system = "iphone", c_device_id = "d1", c_ipv4 = "115.236.188.89", c_gps = "",
-        u_user_id = "zhangsan", v_source = "91助手", v_url_path = "/index/", v_action = "login"))
+        request_id = "111120", c_system = "iphone", c_device_id = "d1",c_ip_addr = "浙江杭州江干",c_ip_country = "中国",c_ip_province = "浙江",c_ip_city = "杭州",c_ip_county = "江干", c_gps = "",
+        u_user_id = "zhangsan", v_source = "91助手", v_url_path = "/index/", v_action = "login"),"")
     } yield {
       APIProcessor.process(Global.businessApi_apply._1)
       APIProcessor.process(Global.businessApi_bind._1)
