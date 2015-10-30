@@ -15,11 +15,11 @@ import scala.concurrent.{Future, Promise}
  */
 object AppVisitProcessor extends VisitCollectProcessor {
 
-  def process(req: AppVisitReq): Future[Resp[String]] = {
+  def process(req: AppVisitReq, remoteIP: String): Future[Resp[String]] = {
     val p = Promise[Resp[String]]()
     val checkPassResp = checkReq(req)
     if (checkPassResp) {
-      packageReq(req).onSuccess {
+      packageReq(req, remoteIP).onSuccess {
         case packageResp =>
           if (packageResp) {
             //save
@@ -52,11 +52,11 @@ object AppVisitProcessor extends VisitCollectProcessor {
     if (req.c_device_id == null) {
       return Resp.badRequest(s"【c_device_id】不能为空")
     }
-    if (req.c_ipv4 == null) {
-      return Resp.badRequest(s"【c_ipv4】不能为空")
-    }
     if (req.v_source == null) {
       return Resp.badRequest("【v_source】不能为空")
+    }
+    if (req.u_user_id == null) {
+      return Resp.badRequest(s"【u_user_id】不能为空")
     }
     if (req.v_url_path == null || req.v_url_path.trim.isEmpty) {
       return Resp.badRequest("【v_url_path】不能为空")
@@ -67,7 +67,7 @@ object AppVisitProcessor extends VisitCollectProcessor {
     Resp.success("")
   }
 
-  private def packageReq(req: AppVisitReq): Future[Resp[VisitEntity]] = {
+  private def packageReq(req: AppVisitReq, remoteIP: String): Future[Resp[VisitEntity]] = {
     val p = Promise[Resp[VisitEntity]]()
     val visitEntity = VisitEntity()
     val time = df.format(new Date())
@@ -80,13 +80,13 @@ object AppVisitProcessor extends VisitCollectProcessor {
     visitEntity.c_platform = VisitEntity.FLAG_PLATFORM_MOBILE
     visitEntity.c_system = req.c_system
     visitEntity.c_device_id = req.c_device_id
-    visitEntity.c_ipv4 = req.c_ipv4
-    val ip = IP.find(req.c_ipv4)
-    visitEntity.c_ip_addr = ip.mkString(" ")
-    visitEntity.c_ip_country = ip(0)
-    visitEntity.c_ip_province = ip(1)
-    visitEntity.c_ip_city = ip(2)
-    visitEntity.c_ip_county = ip(3)
+    visitEntity.c_ipv4 = remoteIP
+    val ip = IP.find(remoteIP)
+    visitEntity.c_ip_addr = if (req.c_ip_addr != null && req.c_ip_addr.nonEmpty) req.c_ip_addr else ip.mkString(" ")
+    visitEntity.c_ip_country = if (req.c_ip_country != null && req.c_ip_country.nonEmpty) req.c_ip_country else ip(0)
+    visitEntity.c_ip_province = if (req.c_ip_province != null && req.c_ip_province.nonEmpty) req.c_ip_province.replace("省", "") else ip(1)
+    visitEntity.c_ip_city = if (req.c_ip_city != null && req.c_ip_city.nonEmpty) req.c_ip_city.replace("市", "") else ip(2)
+    visitEntity.c_ip_county = if (req.c_ip_county != null && req.c_ip_county.nonEmpty) req.c_ip_county.replace("县", "").replace("市", "").replace("区", "") else ip(3)
     visitEntity.c_ip_isp = ""
     visitEntity.c_gps = req.c_gps
     visitEntity.u_user_id = req.u_user_id

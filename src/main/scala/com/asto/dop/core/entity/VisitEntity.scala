@@ -34,15 +34,15 @@ case class VisitEntity() {
   var c_device_id: String = _
   // | Y | 客户端使用的IP，目前只允许IPv4地址
   var c_ipv4: String = _
-  //| Y | 客户端使用IP解析到的完整地址
+  //| Y | 客户端使用IP或gps解析到的完整地址，优先使用gps数据
   var c_ip_addr: String = _
-  // | Y | 客户端使用IP对应的国家
+  // | Y | 客户端使用IP或gps对应的国家，优先使用gps数据
   var c_ip_country: String = _
-  // | Y | 客户端使用IP对应的省
+  // | Y | 客户端使用IP或gps对应的省，优先使用gps数据
   var c_ip_province: String = _
-  // | Y | 客户端使用IP对应的城市
+  // | Y | 客户端使用IP或gps对应的城市，优先使用gps数据
   var c_ip_city: String = _
-  // | Y | 客户端使用IP对应的县
+  // | Y | 客户端使用IP或gps对应的县，优先使用gps数据
   var c_ip_county: String = _
   // | Y | 客户端使用IP对应的运营商
   var c_ip_isp: String = _
@@ -97,13 +97,13 @@ object VisitEntity {
             |    occur_year INT NOT NULL COMMENT '发生年份，格式`yyyyMMdd`,如 2015' ,
             |    c_platform varchar(10) NOT NULL COMMENT '客户端使用的平台，枚举：`pc/mobile` ，除pc以外的设备都归属mobile' ,
             |    c_system varchar(10) NOT NULL COMMENT '客户端使用的系统，枚举：`windows/linux/mac/android/iphone/ipad/wp/otherpad/otherphone/others`' ,
-            |    c_device_id varchar(30) NOT NULL COMMENT '客户端的设备号，仅针对无线平台(ci_platform:mobile)，可用于判断无线平台的新/老访客' ,
+            |    c_device_id varchar(200) NOT NULL COMMENT '客户端的设备号，仅针对无线平台(ci_platform:mobile)，可用于判断无线平台的新/老访客' ,
             |    c_ipv4 varchar(15) NOT NULL COMMENT '客户端使用的IP，目前只允许IPv4地址' ,
-            |    c_ip_addr varchar(1000) NOT NULL COMMENT '客户端使用IP解析到的完整地址' ,
-            |    c_ip_country varchar(10) NOT NULL COMMENT '客户端使用IP对应的国家' ,
-            |    c_ip_province varchar(10) NOT NULL COMMENT '客户端使用IP对应的省' ,
-            |    c_ip_city varchar(10) NOT NULL COMMENT '客户端使用IP对应的城市' ,
-            |    c_ip_county varchar(10) NOT NULL COMMENT '客户端使用IP对应的县' ,
+            |    c_ip_addr varchar(1000) NOT NULL COMMENT '客户端使用IP或gps解析到的完整地址，优先使用gps数据' ,
+            |    c_ip_country varchar(10) NOT NULL COMMENT '客户端使用IP或gps对应的国家，优先使用gps数据' ,
+            |    c_ip_province varchar(10) NOT NULL COMMENT '客户端使用IP或gps对应的省，优先使用gps数据' ,
+            |    c_ip_city varchar(10) NOT NULL COMMENT '客户端使用IP或gps对应的城市，优先使用gps数据' ,
+            |    c_ip_county varchar(10) NOT NULL COMMENT '客户端使用IP或gps对应的县，优先使用gps数据' ,
             |    c_ip_isp varchar(20) NOT NULL COMMENT '客户端使用IP对应的运营商' ,
             |    c_gps varchar(100) NOT NULL COMMENT '客户端使用GPS位置' ,
             |    u_user_id varchar(255) NOT NULL COMMENT '用户id，要求是真实用户表的主键或可以与之映射，未登录用户此字段为空' ,

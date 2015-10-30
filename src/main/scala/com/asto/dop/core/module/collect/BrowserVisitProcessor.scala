@@ -53,6 +53,9 @@ object BrowserVisitProcessor extends VisitCollectProcessor {
     if (req.c_system == null || !VisitEntity.systemEnum.contains(req.c_system.trim)) {
       return Resp.badRequest(s"【c_system】必须为 ${VisitEntity.systemEnum.mkString(",")}")
     }
+    if (req.u_user_id == null) {
+      return Resp.badRequest(s"【u_user_id】不能为空")
+    }
     if (req.u_cookie_id == null || req.u_cookie_id.trim.isEmpty) {
       return Resp.badRequest("【u_cookie_id】不能为空")
     }

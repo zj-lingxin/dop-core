@@ -32,17 +32,17 @@ case class UserOptEntity() {
   var action: String = _
   // | Y | 操作时使用的IP,默认是用户注册时的IP
   var ipv4: String = _
-  //| Y | 操作时使用IP解析到的完整地址,默认是用户注册时的IP
+  //| Y | 操作时使用IP或gps解析到的完整地址,默认是用户注册时的IP
   var ip_addr: String = _
-  // | Y | 操作时使用IP对应的国家,默认是用户注册时的国家
+  // | Y | 操作时使用IP或gps对应的国家,默认是用户注册时的国家
   var ip_country: String = _
-  // | Y | 操作时使用IP对应的省,默认是用户注册时的省
+  // | Y | 操作时使用IP或gps对应的省,默认是用户注册时的省
   var ip_province: String = _
-  // | Y | 操作时使用IP对应的城市,默认是用户注册时的城市
+  // | Y | 操作时使用IP或gps对应的城市,默认是用户注册时的城市
   var ip_city: String = _
-  // | Y | 操作时使用IP对应的县,默认是用户注册时的县
+  // | Y | 操作时使用IP或gps对应的县,默认是用户注册时的县
   var ip_county: String = _
-  // | Y | 操作时使用IP对应的运营商,默认是用户注册时的运营商
+  // | Y | 操作时使用IP或gps对应的运营商,默认是用户注册时的运营商
   var ip_isp: String = _
   // | Y | 金额，bind时为0，单位厘
   var amount: Long = _
@@ -75,12 +75,12 @@ object UserOptEntity {
             |    platform varchar(10) NOT NULL COMMENT '客户端使用的平台，枚举：`pc/mobile` ，除pc以外的设备都归属mobile' ,
             |    source varchar(255) NOT NULL COMMENT '访问转入来源' ,
             |    ipv4 varchar(15) NOT NULL COMMENT '操作时使用的IP,默认是用户注册时的IP' ,
-            |    ip_addr varchar(1000) NOT NULL COMMENT '操作时使用IP解析到的完整地址,默认是用户注册时的IP' ,
-            |    ip_country varchar(10) NOT NULL COMMENT '操作时使用IP对应的国家,默认是用户注册时的国家' ,
-            |    ip_province varchar(10) NOT NULL COMMENT '操作时使用IP对应的省,默认是用户注册时的省' ,
-            |    ip_city varchar(10) NOT NULL COMMENT '操作时使用IP对应的城市,默认是用户注册时的城市' ,
-            |    ip_county varchar(10) NOT NULL COMMENT '操作时使用IP对应的县,默认是用户注册时的县' ,
-            |    ip_isp varchar(20) NOT NULL COMMENT '操作时使用IP对应的运营商,默认是用户注册时的运营商' ,
+            |    ip_addr varchar(1000) NOT NULL COMMENT '操作时使用IP或gps解析到的完整地址,默认是用户注册时的IP' ,
+            |    ip_country varchar(10) NOT NULL COMMENT '操作时使用IP或gps对应的国家,默认是用户注册时的国家' ,
+            |    ip_province varchar(10) NOT NULL COMMENT '操作时使用IP或gps对应的省,默认是用户注册时的省' ,
+            |    ip_city varchar(10) NOT NULL COMMENT '操作时使用IP或gps对应的城市,默认是用户注册时的城市' ,
+            |    ip_county varchar(10) NOT NULL COMMENT '操作时使用IP或gps对应的县,默认是用户注册时的县' ,
+            |    ip_isp varchar(20) NOT NULL COMMENT '操作时使用IP或gps对应的运营商,默认是用户注册时的运营商' ,
             |    action varchar(200) NOT NULL COMMENT '访问行为，用于记录此访问的业务含义，如：绑店、申请xx等' ,
             |    amount BIGINT NOT NULL COMMENT '金额，register时为0，单位厘' ,
             |    PRIMARY KEY(id) ,

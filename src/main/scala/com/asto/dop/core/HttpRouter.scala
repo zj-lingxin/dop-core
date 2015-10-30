@@ -22,16 +22,17 @@ import scala.util.matching.Regex
 class HttpRouter extends Handler[HttpServerRequest] with LazyLogging {
 
   private val rSourceIdMatch = new Regex( """/manage/source/(\S+)/""")
-  private val rVisitIdMatch = new Regex( """/manage/visit/(\S+)/""")
+  private val rVisitIdMatch = new Regex( """/query/realtime/visit/(\S+)/""")
 
-  private def router(request: HttpServerRequest): Unit = {
+  private def router(request: HttpServerRequest,ip:String): Unit = {
     request.path() match {
+      case "/favicon.ico" =>
       //================================Collect================================
       case "/collect/browser/visit/" if request.method().name() == "POST" =>
         request.bodyHandler(new Handler[Buffer] {
           override def handle(data: Buffer): Unit = {
             val browserVisitReq = JsonHelper.toObject(data.toString("UTF-8"), classOf[BrowserVisitReq])
-            BrowserVisitProcessor.process(browserVisitReq, request.remoteAddress().host()).onSuccess {
+            BrowserVisitProcessor.process(browserVisitReq, ip).onSuccess {
               case result => HttpHelper.returnContent(result, request.response())
             }
           }
@@ -39,8 +40,8 @@ class HttpRouter extends Handler[HttpServerRequest] with LazyLogging {
       case "/collect/app/visit/" if request.method().name() == "POST" =>
         request.bodyHandler(new Handler[Buffer] {
           override def handle(data: Buffer): Unit = {
-            val appVisitReq = JsonHelper.toObject(data.getString(0, data.length), classOf[AppVisitReq])
-            AppVisitProcessor.process(appVisitReq).onSuccess {
+            val appVisitReq = JsonHelper.toObject(data.toString("UTF-8"), classOf[AppVisitReq])
+            AppVisitProcessor.process(appVisitReq, ip).onSuccess {
               case result => HttpHelper.returnContent(result, request.response())
             }
           }
@@ -68,6 +69,10 @@ class HttpRouter extends Handler[HttpServerRequest] with LazyLogging {
         }
       case "/query/realtime/visit/" if request.method().name() == "GET" =>
         RealTimeVisitProcessor.process(request.params().map(entry => entry.getKey -> entry.getValue).toMap).onSuccess {
+          case result => HttpHelper.returnContent(result, request.response())
+        }
+      case rVisitIdMatch(visitorId) if request.method().name() == "GET" =>
+        RealTimeVisitProcessor.visitorDetails(Map("visitor_id" -> visitorId)).onSuccess {
           case result => HttpHelper.returnContent(result, request.response())
         }
       case "/query/realtime/source/platform/" if request.method().name() == "GET" =>
@@ -151,10 +156,6 @@ class HttpRouter extends Handler[HttpServerRequest] with LazyLogging {
         SourceProcessor.delete(Map("id" -> id)).onSuccess {
           case result => HttpHelper.returnContent(result, request.response())
         }
-      case rVisitIdMatch(visitorId) if request.method().name() == "GET" =>
-        RealTimeVisitProcessor.visitorDetails(Map("visitor_id" -> visitorId)).onSuccess {
-          case result => HttpHelper.returnContent(result, request.response())
-        }
       //================================Special Process================================
       //历史数据迁移，正常情况下用户注册信息由visit记录中v_action=register_success时写入user_opt表
       case "/special/useropt/register/migration/" if request.method().name() == "GET" =>
@@ -172,9 +173,15 @@ class HttpRouter extends Handler[HttpServerRequest] with LazyLogging {
     if (request.method().name() == "OPTIONS") {
       HttpHelper.returnContent("", request.response(), "text/html")
     } else {
-      logger.trace(s"Receive a request , from ${request.remoteAddress().host()} ")
+      val ip =
+        if (request.headers().contains("X-Forwarded-For") && request.getHeader("X-Forwarded-For").nonEmpty) {
+          request.getHeader("X-Forwarded-For")
+        } else {
+          request.remoteAddress().host()
+        }
+      logger.trace(s"Receive a request [${request.uri()}] , from $ip ")
       try {
-        router(request)
+        router(request,ip)
       } catch {
         case ex: Throwable =>
           logger.error("Http process error.", ex)

@@ -4,6 +4,7 @@ import com.asto.dop.core.entity.VisitEntity
 import com.asto.dop.core.helper.DBHelper
 import com.ecfront.common.{JsonHelper, Resp}
 import io.vertx.core.json.JsonObject
+import scala.collection.mutable.ArrayBuffer
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.{Future, Promise}
 
@@ -43,14 +44,22 @@ object RealTimeVisitProcessor extends QueryProcessor {
 
 
   override protected def process(req: Map[String, String], p: Promise[Resp[Any]]): Unit = {
-    if (!req.contains("source") || !req.contains("platform") || !req.contains("pageNumber")) {
-      p.success(Resp.badRequest("【source】【platform】【pageNumber】不能为空"))
+    if (!req.contains("pageNumber")) {
+      p.success(Resp.badRequest("【pageNumber】不能为空"))
     } else {
-      val source = req("source")
-      val platform = req("platform")
+      var sqlSeg = ""
+      val parameters = ArrayBuffer[Any]()
+      if (req.contains("source")) {
+        sqlSeg = s" AND v_source = ? "
+        parameters += req("source")
+      }
+      if (req.contains("platform")) {
+        sqlSeg += s" AND c_platform = ?  "
+        parameters += req("platform")
+      }
       val pageNumber = req("pageNumber").toLong
       val pageSize = req.getOrElse("pageSize", "15").toInt
-      VisitEntity.db.page("v_source =?  AND c_platform =? ", List(source, platform), pageNumber, pageSize).onSuccess {
+      VisitEntity.db.page(s" 1=1 $sqlSeg ", parameters.toList, pageNumber, pageSize).onSuccess {
         case pageResp =>
           p.success(Resp.success(pageResp.body))
       }

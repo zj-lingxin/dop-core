@@ -8,8 +8,9 @@ import com.asto.dop.core.module.collect.APIProcessor
 import com.github.shyiko.mysql.binlog.BinaryLogClient
 import com.typesafe.scalalogging.slf4j.LazyLogging
 import io.vertx.core._
-import io.vertx.core.http.{HttpServer, HttpServerOptions}
+import io.vertx.core.http.{ClientAuth, HttpServer, HttpServerOptions}
 import io.vertx.core.json.JsonObject
+import io.vertx.core.net.{PemKeyCertOptions, PemTrustOptions}
 import io.vertx.ext.jdbc.JDBCClient
 
 /**
@@ -39,6 +40,12 @@ class Startup extends AbstractVerticle with LazyLogging {
   private def startHttpServer(): Unit = {
     val host = Global.config.getJsonObject("http").getString("host")
     val port = Global.config.getJsonObject("http").getInteger("port")
+    val sslPort: Int =
+      if (Global.config.getJsonObject("http").containsKey("sslPort")) {
+        Global.config.getJsonObject("http").getInteger("sslPort")
+      } else {
+        0
+      }
     vertx.createHttpServer(new HttpServerOptions().setCompressionSupported(true).setTcpKeepAlive(true))
       //注册了自定义路由器：HttpRouter
       .requestHandler(new HttpRouter).listen(port, host, new Handler[AsyncResult[HttpServer]] {
@@ -50,6 +57,21 @@ class Startup extends AbstractVerticle with LazyLogging {
         }
       }
     })
+    if (sslPort != 0) {
+      vertx.createHttpServer(new HttpServerOptions().setSsl(true)
+        .setPemTrustOptions(
+          new PemTrustOptions().addCertPath("ssl.pem"))
+      )
+        .requestHandler(new HttpRouter).listen(sslPort, host, new Handler[AsyncResult[HttpServer]] {
+        override def handle(event: AsyncResult[HttpServer]): Unit = {
+          if (event.succeeded()) {
+            logger.info(s"DOP core app https start successful. https://$host:$sslPort/")
+          } else {
+            logger.error("Https start fail .", event.cause())
+          }
+        }
+      })
+    }
   }
 
   private def startDBClient(): Unit = {

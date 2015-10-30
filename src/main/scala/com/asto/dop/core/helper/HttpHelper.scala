@@ -69,6 +69,7 @@ object HttpHelper extends LazyLogging {
       case r: String => r
       case _ => JsonHelper.toJsonString(result)
     }
+    logger.trace("Response: \r\n" + res)
     response.setStatusCode(200).putHeader("Content-Type", contentType)
       .putHeader("Cache-Control", "no-cache")
       .putHeader("Access-Control-Allow-Origin", "*")

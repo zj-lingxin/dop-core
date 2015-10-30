@@ -1,7 +1,5 @@
 package com.asto.dop.core.module.query
 
-import java.util.Calendar
-
 import com.asto.dop.core.entity.{UserOptEntity, VisitEntity}
 import com.asto.dop.core.helper.DBHelper
 import com.ecfront.common.{JsonHelper, Resp}
@@ -17,9 +15,6 @@ object RealTimeSummaryProcessor extends QueryProcessor {
 
   private val TIMES=Set("today","yesterday","last7","last30")
   private val INDEXS=Set("pv","uv","register","bind","apply")
-
-
-  private def theDayBeforeYesterday = dateOffset(-2)
 
   override protected def process(req: Map[String, String], p: Promise[Resp[Any]]): Unit = {
     if (!req.contains("time") || !req.contains("index")|| !TIMES.contains(req("time"))|| !INDEXS.contains(req("index"))) {
