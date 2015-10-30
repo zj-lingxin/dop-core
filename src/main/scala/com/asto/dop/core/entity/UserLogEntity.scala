@@ -11,10 +11,10 @@ import scala.concurrent.Future
  * 用户操作日志实体，用于记录UserOptEntity记录最后一次更新时间
  */
 case class UserLogEntity(
-                      // | Y | 记录主键，是操作行为，用于记录此访问的业务含义，枚举：`bind/apply/self_examine_pass/bank_examine_pass`
-                      var action: String,
-                      // | Y | 最后一次更新时间，格式`yyyyMMddHHmmss`,如 20151012100000
-                      var last_update_time: String
+                        // | Y | 记录主键，是操作行为，用于记录此访问的业务含义，枚举：`bind/apply/self_examine_pass/bank_examine_pass`
+                        var action: String,
+                        // | Y | 最后一次更新时间，格式`yyyyMMddHHmmss`,如 20151012100000
+                        var last_update_time: String
                         )
 
 object UserLogEntity extends LazyLogging {
