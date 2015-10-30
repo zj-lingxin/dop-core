@@ -22,6 +22,7 @@ import scala.util.matching.Regex
 class HttpRouter extends Handler[HttpServerRequest] with LazyLogging {
 
   private val rSourceIdMatch = new Regex( """/manage/source/(\S+)/""")
+  private val rVisitIdMatch = new Regex( """/manage/visit/(\S+)/""")
 
   private def router(request: HttpServerRequest): Unit = {
     request.path() match {
@@ -148,6 +149,10 @@ class HttpRouter extends Handler[HttpServerRequest] with LazyLogging {
         }
       case rSourceIdMatch(id) if request.method().name() == "DELETE" =>
         SourceProcessor.delete(Map("id" -> id)).onSuccess {
+          case result => HttpHelper.returnContent(result, request.response())
+        }
+      case rVisitIdMatch(visitorId) if request.method().name() == "GET" =>
+        RealTimeVisitProcessor.visitorDetails(Map("visitor_id" -> visitorId)).onSuccess {
           case result => HttpHelper.returnContent(result, request.response())
         }
       //================================Special Process================================
