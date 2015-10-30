@@ -16,7 +16,6 @@ trait QueryProcessor extends LazyLogging {
 
   protected val df = new SimpleDateFormat("yyyyMMddHHmmss")
   protected val dfd = new SimpleDateFormat("yyyyMMdd")
-
   protected def process(req: Map[String, String], p: Promise[Resp[Any]])
 
   def process(req: Map[String, String]): Future[Resp[Any]] = {
