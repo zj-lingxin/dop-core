@@ -53,14 +53,18 @@ class CollectProcessSpec extends BusinessBasicSpec {
       request_id = "123456",
       c_system = "iphone",
       c_device_id = "12323-24344-3455544-566744",
-      c_ipv4 = "115.236.188.99",
+      c_ip_addr = "浙江杭州江干",
+      c_ip_country = "中国",
+      c_ip_province = "浙江",
+      c_ip_city = "杭州",
+      c_ip_county = "江干",
       c_gps = "",
       u_user_id = "test_user",
       v_source = "91助手",
       v_url_path = "/user/login/",
       v_action = "login"
     )
-    AppVisitProcessor.process(req).onSuccess {
+    AppVisitProcessor.process(req,"").onSuccess {
       case resultResp =>
         assert(resultResp)
         VisitEntity.db.get(resultResp.body).onSuccess {
